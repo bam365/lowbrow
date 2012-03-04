@@ -6,6 +6,8 @@
 #define ALTKEY   Qt::AltModifier
 
 
+void set_default_bindings(LBMain* lbm);
+
 int main(int argc, char *argv[])
 {
         QApplication a(argc, argv);
@@ -13,6 +15,7 @@ int main(int argc, char *argv[])
         LBMain* w = new LBMain();
         int ret;
 
+        set_default_bindings(w);
 
         w->show();
         ret = a.exec();
@@ -23,5 +26,11 @@ int main(int argc, char *argv[])
 
 void set_default_bindings(LBMain* lbm)
 {
-        bindings->add("goc", newcmd(w, &LBMain::open, "www.cnn.com"));
+        lbm->addbind("j", "scroll", "20");
+        lbm->addbind("k", "scroll", "-20");
+        lbm->addbind("b", "back", NULL);
+        lbm->addbind("o", "open", NULL);
+        lbm->addbind("goc", "open", "http://www.cnn.com");
+        lbm->addbind("gof", "open", "http://www.foxnews.com");
+        lbm->addbind("gog", "open", "http://www.google.com");
 }

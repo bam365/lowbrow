@@ -21,4 +21,4 @@ HEADERS  += lbmain.h \
 
 FORMS    += lbmain.ui
 
-QMAKE_CXXFLAGS += -Wno-parentheses
+QMAKE_CXXFLAGS += -Wno-parentheses -Wno-write-strings

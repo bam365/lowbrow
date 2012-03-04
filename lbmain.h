@@ -5,6 +5,7 @@
 #include <QUrl>
 #include <QString>
 #include <vector>
+#include <string>
 #include <map>
 #include "bindings.h"
 
@@ -18,8 +19,11 @@ namespace Ui {
         class LBMain;
 }
 
+#define ARRYSIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 
 typedef bool (LBMain::*KeyPressHandler)(QKeyEvent*);
+typedef void (LBMain::*LBCmdFunc)(QString);
 
 
 
@@ -38,20 +42,30 @@ Q_OBJECT
 public:
         explicit LBMain(QWidget *parent = 0);
 
-        void addbind(char* str, char* func, char *arg);
+        bool addbind(char* str, char* func, char *arg);
 
         //Commands
         void open(QString url);
         void tabopen(QString url);
-        void scrolldown(QString arg);
-        void scrollup(QString arg);
+        void back(QString arg);
+        void scroll(QString arg);
 
         ~LBMain();
+
+public slots:
+        void setProgress(int);
+        void setUrl(const QUrl&);
+        void loadStarted();
+        void loadFinished(bool);
+        void commandEntered();
 
 protected:
         bool kphandler(QKeyEvent*);
         void init();
         void add_new_tab(QString& url);
+        void connect_curr_tab_ss();
+        void update_sb();
+        QString get_arg(char* str);
 
 
 private:
@@ -61,13 +75,14 @@ private:
         std::vector<Tab>::iterator m_currtab;
         Bindings m_bindings;
         bool m_passthrough;
+        std::string m_cmd;
 };
 
 
 
 
 struct Command {
-        void (LBMain::*f)(QString);
+        LBCmdFunc f;
         LBMain* obj;
         QString* arg;
 
@@ -82,7 +97,8 @@ struct Command {
         }
 };
 
-Command* newcmd(LBMain* obj, void (LBMain::*f)(QString), char* arg);
+
+Command* newcmd(LBMain* obj, LBCmdFunc f, char* arg);
 
 
 #endif // LBMAIN_H

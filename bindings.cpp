@@ -43,34 +43,57 @@ bool Bindings::add(char* str, Command* cmd)
 }
 
 
-Command* Bindings::find(char* str)
+Command* Bindings::find(const char* str)
 {
         int mk;
+        char *strns;
         map<int, Command*>::iterator mci;
         map<string, Command*>::iterator ci;
+        Command* ret = NULL;
 
-        if (is_mod_binding(str)) {
-                if ((mk = modkey(str) == -1))
-                        return NULL;
-                if ((mci = m_modcmds.find(mk)) == m_modcmds.end())
-                        return NULL;
-                else
-                        return mci->second;
+
+        strns = new char[strlen(str)];
+        strcpy(strns, str);
+        remove_spaces(strns);
+        if (is_mod_binding(strns)) {
+                if ((mk = modkey(strns) == -1))
+                        ret = NULL;
+                if ((mci = m_modcmds.find(mk)) != m_modcmds.end())
+                        ret = mci->second;
         } else {
-                if ((ci = m_cmds.find(string(str))) == m_cmds.end())
-                        return NULL;
-                else
-                        return ci->second;
+                if ((ci = m_cmds.find(string(strns))) != m_cmds.end())
+                        ret = ci->second;
 
         }
+        delete [] strns;
 
-        return NULL;
+        return ret;
 }
 
 
-Command* Bindings::findmod(short c, short mods)
+bool Bindings::find_startswith(const char* str)
 {
-        return NULL;
+        map<string, Command*>::iterator i;
+        int sl = strlen(str);
+
+        for (i = m_cmds.begin(); i != m_cmds.end(); i++) {
+                if (i->first.compare(0, sl, str) == 0)
+                        return true;
+        }
+        return false;
+}
+
+
+Command* Bindings::findmod(int mods, int k)
+{
+        //TODO: OR'ing these two together may not be legit
+        int mk = mods | k;
+        map<int, Command*>::iterator i;
+
+        if ((i = m_modcmds.find(mk)) == m_modcmds.end())
+                return NULL;
+        else
+                return i->second;
 }
 
 
@@ -132,7 +155,7 @@ int Bindings::modkey(char* str)
                                         return -1;
                                 }
                         } else {
-                                key = *c;
+                                key = toupper(*c);
                         }
                 }
         }

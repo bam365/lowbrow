@@ -14,8 +14,9 @@ public:
         Bindings();
 
         bool add(char*, Command*);
-        Command* find(char*);
-        Command* findmod(short c, short mods);
+        Command* find(const char*);
+        Command* findmod(int mods, int k);
+        bool find_startswith(const char*);
 
         static int modkey(char*);
 
