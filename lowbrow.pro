@@ -20,3 +20,5 @@ HEADERS  += lbmain.h \
     bindings.h
 
 FORMS    += lbmain.ui
+
+QMAKE_CXXFLAGS += -Wno-parentheses

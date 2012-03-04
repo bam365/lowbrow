@@ -6,13 +6,21 @@
 #include <QString>
 #include <vector>
 #include <map>
+#include "bindings.h"
 
+//Forward decl
 class LBWebView;
-
+class Command;
+class LBMain;
+class Bindings;
 
 namespace Ui {
         class LBMain;
 }
+
+
+typedef bool (LBMain::*KeyPressHandler)(QKeyEvent*);
+
 
 
 struct Tab {
@@ -20,10 +28,6 @@ struct Tab {
         QUrl* url;
         LBWebView* wv;
 };
-
-
-class Command;
-typedef std::map<char*, Command*> Keybindings;
 
 
 
@@ -34,14 +38,18 @@ Q_OBJECT
 public:
         explicit LBMain(QWidget *parent = 0);
 
-        void setKeybindings(Keybindings kb);
+        void addbind(char* str, char* func, char *arg);
 
+        //Commands
         void open(QString url);
         void tabopen(QString url);
+        void scrolldown(QString arg);
+        void scrollup(QString arg);
 
         ~LBMain();
 
 protected:
+        bool kphandler(QKeyEvent*);
         void init();
         void add_new_tab(QString& url);
 
@@ -51,7 +59,10 @@ private:
 
         std::vector<Tab> m_tabs;
         std::vector<Tab>::iterator m_currtab;
+        Bindings m_bindings;
+        bool m_passthrough;
 };
+
 
 
 
@@ -62,11 +73,12 @@ struct Command {
 
         void exec()
         {
-                if (f && obj)
+                if (f && obj) {
                         if (arg)
                                 (obj->*f)(*arg);
                         else
                                 (obj->*f)(QString(""));
+                }
         }
 };
 

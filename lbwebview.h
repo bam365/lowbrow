@@ -11,22 +11,19 @@ class LBWebView : public QWebView
 Q_OBJECT
 
 public:
-        explicit LBWebView(QWidget *parent = 0);
-
-        void setKeybindings(Keybindings*);
-
-        //Properties
-        bool passThrough;
+        explicit LBWebView(LBMain *parent, KeyPressHandler kph);
 
 signals:
 
 public slots:
 
 protected:
-        void keyPressEvent(QKeyEvent *ev);
+        void keyPressEvent(QKeyEvent*);
+
 
 private:
-        Keybindings* m_kb;
+        LBMain* m_lbm;
+        KeyPressHandler m_kphandler;
 
 };
 

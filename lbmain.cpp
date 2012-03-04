@@ -1,7 +1,9 @@
 #include "lbmain.h"
+#include "bindings.h"
 #include "lbwebview.h"
 #include "ui_lbmain.h"
 #include <QStackedWidget>
+
 
 
 Command* newcmd(LBMain* obj, void (LBMain::*f)(QString), char* arg)
@@ -25,6 +27,12 @@ LBMain::LBMain(QWidget *parent) :
 }
 
 
+void LBMain::setBindings(Bindings* kb)
+{
+        m_bindings = kb;
+}
+
+
 void LBMain::init()
 {
         QString homepage;
@@ -37,6 +45,12 @@ void LBMain::init()
 }
 
 
+bool LBMain::kphandler(QKeyEvent* key)
+{
+        return false;
+}
+
+
 void LBMain::add_new_tab(QString& url)
 {
         Tab nt;
@@ -45,7 +59,7 @@ void LBMain::add_new_tab(QString& url)
 
         nt.title = new QString("Test");
         nt.url = new QUrl(url, QUrl::TolerantMode);
-        nt.wv = new LBWebView();
+        nt.wv = new LBWebView(this, &LBMain::kphandler);
         nt.wv->load(*(nt.url));
         //nt.wv->show();
         m_tabs.push_back(nt);
