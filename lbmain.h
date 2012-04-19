@@ -11,9 +11,11 @@
 
 //Forward decl
 class LBWebView;
+class LBCommandBar;
 class Command;
 class LBMain;
 class Bindings;
+
 
 namespace Ui {
         class LBMain;
@@ -39,42 +41,53 @@ class LBMain : public QMainWindow
 {
 Q_OBJECT
 
-public:
+public: //Constants
+        enum Modes {
+                MODE_NORMAL,
+                MODE_COMMAND,
+                MODE_INPUT,
+                MODE_PASSTHROUGH
+        };
+
+public: //Interface
         explicit LBMain(QWidget *parent = 0);
+        ~LBMain();
 
         bool addbind(char* str, char* func, char *arg);
 
-        //Commands
+public:  //Commands
         void open(QString url);
         void tabopen(QString url);
         void back(QString arg);
         void scroll(QString arg);
 
-        ~LBMain();
 
 public slots:
         void setProgress(int);
         void setUrl(const QUrl&);
         void loadStarted();
         void loadFinished(bool);
-        void commandEntered();
+        void commandEntered(QString);
 
 protected:
         bool kphandler(QKeyEvent*);
         void init();
+        void init_cmdbar();
         void add_new_tab(QString& url);
         void connect_curr_tab_ss();
         void update_sb();
         QString get_arg(char* str);
 
 
-private:
-        Ui::LBMain *ui;
+private: //UI children
+        Ui::LBMain* ui;
+        LBCommandBar* m_cmdbar;
 
+private: //Data
         std::vector<Tab> m_tabs;
         std::vector<Tab>::iterator m_currtab;
         Bindings m_bindings;
-        bool m_passthrough;
+        int  m_mode;
         std::string m_cmd;
 };
 

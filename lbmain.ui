@@ -14,7 +14,7 @@
    <string>LBMain</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="vloMain">
     <property name="spacing">
      <number>0</number>
     </property>
@@ -61,22 +61,19 @@ color: rgb(255, 255, 255);</string>
         <height>25</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <family>Terminus</family>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
       <widget class="QWidget" name="page"/>
       <widget class="QWidget" name="page_2"/>
      </widget>
     </item>
     <item>
-     <widget class="QLineEdit" name="ledCmd">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>0</height>
-       </size>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QHBoxLayout" name="hloMain">
       <property name="spacing">
        <number>0</number>
       </property>

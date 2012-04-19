@@ -13,11 +13,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         lbmain.cpp \
     lbwebview.cpp \
-    bindings.cpp
+    bindings.cpp \
+    lbcommandbar.cpp
 
 HEADERS  += lbmain.h \
     lbwebview.h \
-    bindings.h
+    bindings.h \
+    lbcommandbar.h
 
 FORMS    += lbmain.ui
 

@@ -1,6 +1,7 @@
 #include "lbmain.h"
 #include "bindings.h"
 #include "lbwebview.h"
+#include "lbcommandbar.h"
 #include "ui_lbmain.h"
 #include <QStackedWidget>
 #include <QKeyEvent>
@@ -53,6 +54,7 @@ void sort_cmap(struct CmdMap *beg, struct CmdMap *end)
 
 
 //Recursive binary search of cmap, returns fn if found or NULL if not found
+//TODO: This still doesn't work right
 LBCmdFunc find_cmap(char *str, struct CmdMap *beg, struct CmdMap *end)
 {
         struct CmdMap *foo = CMAP;
@@ -102,30 +104,40 @@ Command* newcmd(LBMain* obj, LBCmdFunc f, char* arg)
 
 LBMain::LBMain(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::LBMain)
+    ui(new Ui::LBMain),
+    m_cmdbar(NULL)
 {
         ui->setupUi(this);
         init();
 }
 
 
-
+//TODO: There's a lot of magic constants here and throughout that need to be
+//      replaced with settings
 void LBMain::init()
 {
         QString homepage;
 
         sort_cmap(CMAP, CMAP+ARRYSIZE(CMAP)-1);
 
-        ui->ledCmd->setMaximumHeight(0);
+        init_cmdbar();
         ui->lblTabs->setMaximumHeight(0);
         ui->lblTabs->setMinimumHeight(0);
         homepage = "http://www.google.com";
-        m_passthrough = false;
+        m_mode = MODE_NORMAL;
         add_new_tab(homepage);
         update_sb();
         m_currtab->wv->setFocus(Qt::OtherFocusReason);
-        connect(ui->ledCmd, SIGNAL(returnPressed()),
-                this, SLOT(commandEntered()));
+}
+
+
+void LBMain::init_cmdbar()
+{
+        if (!m_cmdbar)
+                m_cmdbar = new LBCommandBar(this);
+        connect(m_cmdbar, SIGNAL(cmdentered(QString)),
+                this, SLOT(commandEntered(QString)));
+        ui->vloMain->addWidget(m_cmdbar);
 }
 
 
@@ -136,16 +148,16 @@ bool LBMain::kphandler(QKeyEvent* key)
         Command *cmd = NULL;
 
         if (key->modifiers() == Qt::ControlModifier && key->key() == 'P')
-                m_passthrough = !m_passthrough;
-        if (m_passthrough)
+                m_mode = (m_mode == MODE_PASSTHROUGH) ?
+                                        MODE_NORMAL : MODE_PASSTHROUGH;
+        if (m_mode == MODE_PASSTHROUGH)
                 return false;
 
         if (k == Qt::Key_Escape) {
                 m_cmd = "";
                 update_sb();
                 return true;
-        } else if (mods) {
-                cmd = m_bindings.findmod(mods, k);
+        } else if (mods) { cmd = m_bindings.findmod(mods, k);
         } else {
                 m_cmd += key->text().toAscii().data();
                 cmd = m_bindings.find(m_cmd.c_str());
@@ -209,43 +221,6 @@ void LBMain::update_sb()
 }
 
 
-string make_input_mask(char* str, QLineEdit* led)
-{
-        string mask = "";
-        char *c;
-        int left;
-
-        mask += "\:";
-        for (c = str; *c != '\0'; c++) {
-                mask += '\\';
-                mask += *c;
-        }
-        mask += "\\ ";
-        //TODO: This is stupid.
-        for (left = led->maxLength() - strlen(str) - 1; left >= 0; left--)
-                mask += "x";
-
-        return mask;
-}
-
-
-QString LBMain::get_arg(char* str)
-{
-        QString ret;
-        string mask = make_input_mask(str, ui->ledCmd);
-        ui->ledCmd->setInputMask(mask.c_str());
-        ui->ledCmd->setMinimumHeight(20);
-        ui->ledCmd->setMaximumHeight(20);
-        ui->ledCmd->setFocus(Qt::OtherFocusReason);
-        ret = ui->ledCmd->text();
-        ret.remove(0, strlen(str));
-
-        return ret;
-}
-
-
-
-
 bool LBMain::addbind(char* str, char* lbf, char *arg)
 {
         LBCmdFunc cmdfn;
@@ -258,18 +233,27 @@ bool LBMain::addbind(char* str, char* lbf, char *arg)
 }
 
 
+
 void LBMain::open(QString url)
 {
-        if (url == "")
-                url = get_arg(find_cmap(&LBMain::open, CMAP,
-                                        CMAP + ARRYSIZE(CMAP)-1));
-        m_currtab->wv->load(QUrl(url, QUrl::TolerantMode));
+        if (url == "") {
+                m_cmdbar->getarg(find_cmap(&LBMain::open, CMAP,
+                                 CMAP + ARRYSIZE(CMAP)-1));
+        } else {
+                m_currtab->wv->load(QUrl(url, QUrl::TolerantMode));
+        }
 }
+
 
 void LBMain::tabopen(QString url)
 {
-        add_new_tab(url);
+        if (url == "")
+                m_cmdbar->getarg(find_cmap(&LBMain::tabopen, CMAP,
+                                 CMAP + ARRYSIZE(CMAP)-1));
+        else
+                add_new_tab(url);
 }
+
 
 void LBMain::scroll(QString arg)
 {
@@ -312,18 +296,13 @@ void LBMain::loadFinished(bool)
 }
 
 
-void LBMain::commandEntered()
+void LBMain::commandEntered(QString txt)
 {
-        QString txt = ui->ledCmd->text();
         QString cmd, arg;
         QStringList sl;
-        LBCmdFunc fn;
+        LBCmdFunc fn = NULL;
 
-        ui->ledCmd->setMinimumHeight(0);
-        ui->ledCmd->setMaximumHeight(0);
-        ui->ledCmd->setText("");
         m_currtab->wv->setFocus(Qt::OtherFocusReason);
-        txt.remove(0, 1);
         sl = txt.split(' ', QString::SkipEmptyParts);
         if (sl.count() < 1)
                 return;
@@ -342,4 +321,8 @@ void LBMain::commandEntered()
 LBMain::~LBMain()
 {
         delete ui;
+        if (m_cmdbar) {
+                delete m_cmdbar;
+                m_cmdbar = NULL;
+        }
 }
